@@ -73,3 +73,35 @@ ElevenLabs audio for a session. Returns: audio_url (mp3), duration_seconds, gene
 - Keep bundle small — no heavy charting libraries, use CSS/SVG
 - No external fonts beyond Tailwind defaults
 - The backend WILL have CORS enabled for localhost:3000
+
+## ElevenLabs integration (voice agent — not just TTS)
+CropAdvisor has TWO interfaces to the same agent brain:
+1. **SMS** via Twilio — farmer texts, gets text response
+2. **Phone call** via ElevenLabs Conversational AI — farmer CALLS a number, talks to the agent live
+
+The ElevenLabs voice agent has the same three tools (get_weather, get_crop_health, get_soil_profile) and calls the same Django backend endpoints. It's a parallel interface, not a post-processing step.
+
+### What the dashboard shows during a live call
+- Call status (ringing / in progress / ended)
+- Audio waveform / who is speaking
+- Real-time tool calls appearing as the agent processes voice input
+- Live transcript
+- Final recommendation card
+
+This is the demo's best moment: a judge calls the number, the dashboard lights up.
+
+### Voice persona
+Warm, conversational farming advisor. Not robotic. Says things like "looks like your cotton is under some stress" not "NDVI reading 0.42 indicates moderate vegetation stress."
+
+
+## Design system
+See DESIGN_SYSTEM.md in this directory for the complete visual language. The philosophy is called "Topographic Intelligence" — inspired by USGS survey maps and agricultural field journals, not generic AI dashboards.
+
+Key points:
+- Warm background (#FAFAF5), not dark mode
+- National Park font for headings, Outfit for body, IBM Plex Mono for data
+- Forest green (#2D4A3E) primary, terra cotta (#C4704B) accent
+- Subtle grid pattern underneath everything (like survey coordinates)
+- Split survey layout: narrow dark phone mockup left, wide warm pipeline right
+- NDVI colors map to actual vegetation health progression (green → amber → red)
+- No shadows, no purple gradients, no generic card grids
