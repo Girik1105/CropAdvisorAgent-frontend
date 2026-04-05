@@ -50,7 +50,7 @@ export default function SignupPage() {
             Create account
           </h1>
           <p className="font-editorial italic text-text/40 text-[15px] mt-1">
-            Start monitoring your fields with CropAdvisor
+            Start monitoring your fields with FieldAgent
           </p>
         </div>
 

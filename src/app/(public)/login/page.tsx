@@ -42,7 +42,7 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="font-editorial italic text-text/40 text-[15px] mt-1">
-            Sign in to your CropAdvisor account
+            Sign in to your FieldAgent account
           </p>
         </div>
 
@@ -103,7 +103,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-text">See CropAdvisor in action</p>
+              <p className="text-[13px] font-semibold text-text">See FieldAgent in action</p>
               <p className="text-[12px] text-text/45 leading-relaxed mt-0.5">
                 This demo account has pre-populated fields, live weather data, USDA soil profiles, and completed health reports so you can explore the full agent experience.
               </p>

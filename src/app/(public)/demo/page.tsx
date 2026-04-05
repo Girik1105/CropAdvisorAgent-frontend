@@ -50,7 +50,7 @@ export default function DemoPage() {
             Interactive Demo
           </h1>
           <p className="text-[15px] text-text/40 mt-2 max-w-lg mx-auto">
-            Explore CropAdvisor like a real user — send messages, view traces, browse fields and sessions.
+            Explore FieldAgent like a real user — send messages, view traces, browse fields and sessions.
           </p>
         </div>
 

@@ -120,7 +120,7 @@ export default function Home() {
               An agent, not a dashboard
             </h2>
             <p className="text-[16px] text-text/40 mt-3 max-w-lg mx-auto">
-              CropAdvisor doesn&apos;t show you data — it makes decisions and tells you exactly what to do.
+              FieldAgent doesn&apos;t show you data — it makes decisions and tells you exactly what to do.
             </p>
           </div>
 

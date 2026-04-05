@@ -75,17 +75,17 @@ function CallTab() {
         agentId,
         connectionType: 'websocket',
         onConnect: ({ conversationId }) => {
-          console.log('[CropAdvisor] Voice connected:', conversationId)
+          console.log('[FieldAgent] Voice connected:', conversationId)
         },
         onDisconnect: (details) => {
-          console.log('[CropAdvisor] Voice disconnected:', details)
+          console.log('[FieldAgent] Voice disconnected:', details)
           sessionRef.current = null
           if (details.reason === 'error') {
             setError((details as { message?: string }).message ?? 'Connection lost')
           }
         },
         onError: (message, context) => {
-          console.error('[CropAdvisor] Voice error:', message, context)
+          console.error('[FieldAgent] Voice error:', message, context)
           setError(message)
         },
         onStatusChange: ({ status: s }) => setStatus(s),
@@ -93,7 +93,7 @@ function CallTab() {
       })
       sessionRef.current = session
     } catch (err) {
-      console.error('[CropAdvisor] startSession failed:', err)
+      console.error('[FieldAgent] startSession failed:', err)
       setStatus('disconnected')
       const msg = err instanceof Error ? err.message : String(err)
       if (msg.includes('Permission') || msg.includes('NotAllowed')) {
@@ -120,7 +120,7 @@ function CallTab() {
         <div className="w-16 h-16 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-3">
           <span className="text-[18px] text-[#5B7C6B] font-bold">CA</span>
         </div>
-        <p className="text-white text-[16px] font-medium">CropAdvisor</p>
+        <p className="text-white text-[16px] font-medium">FieldAgent</p>
         <p className="text-white/35 text-[12px] mt-0.5">AI Farming Agent</p>
         <button
           onClick={handleCall}
@@ -143,7 +143,7 @@ function CallTab() {
         <div className="w-16 h-16 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-3">
           <span className="text-[18px] text-[#5B7C6B] font-bold">CA</span>
         </div>
-        <p className="text-white text-[16px] font-medium">CropAdvisor</p>
+        <p className="text-white text-[16px] font-medium">FieldAgent</p>
         <p className="text-white/30 text-[11px] mt-0.5">Connecting...</p>
         <div className="mt-8 w-14 h-14 rounded-full bg-[#22c55e]/50 flex items-center justify-center">
           <div className="w-5 h-5 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
@@ -160,7 +160,7 @@ function CallTab() {
         <div className="w-14 h-14 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-2">
           <span className="text-[16px] text-[#5B7C6B] font-bold">CA</span>
         </div>
-        <p className="text-white text-[15px] font-medium">CropAdvisor</p>
+        <p className="text-white text-[15px] font-medium">FieldAgent</p>
         <p className="text-white/30 text-[11px] mt-0.5">
           {isSpeaking ? 'Agent is speaking...' : 'Listening...'}
         </p>
@@ -200,7 +200,7 @@ function CallTab() {
       <div className="w-14 h-14 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-2">
         <span className="text-[16px] text-[#5B7C6B] font-bold">CA</span>
       </div>
-      <p className="text-white text-[15px] font-medium">CropAdvisor</p>
+      <p className="text-white text-[15px] font-medium">FieldAgent</p>
       <p className="text-white/30 text-[11px] mt-0.5">Ending call...</p>
       <div className="mt-8 w-14 h-14 rounded-full bg-red-500/50 flex items-center justify-center">
         <div className="w-5 h-5 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
@@ -360,7 +360,7 @@ export default function PhoneMockup({ onResponse, useMock = false }: PhoneMockup
                   <span className="text-[11px] text-[#5B7C6B] font-bold">CA</span>
                 </div>
                 <div>
-                  <p className="text-white text-[14px] font-medium leading-tight">CropAdvisor</p>
+                  <p className="text-white text-[14px] font-medium leading-tight">FieldAgent</p>
                   <div className="flex items-center gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#5B7C6B]" />
                     <span className="text-[10px] text-white/30">Online</span>

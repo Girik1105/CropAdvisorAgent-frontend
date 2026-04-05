@@ -173,7 +173,7 @@ export default function AskAgentPage() {
                       <circle cx="8" cy="8" r="6" />
                     </svg>
                   </div>
-                  <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">CropAdvisor</span>
+                  <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">FieldAgent</span>
                 </div>
               )}
               {msg.role === 'user' ? (
@@ -203,7 +203,7 @@ export default function AskAgentPage() {
                     <circle cx="8" cy="8" r="6" />
                   </svg>
                 </div>
-                <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">CropAdvisor</span>
+                <span className="text-[10px] font-semibold text-accent uppercase tracking-wider">FieldAgent</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-text/20 typing-dot" />

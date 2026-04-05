@@ -84,7 +84,7 @@ export default function DashboardLayout({
         {/* Logo */}
         <div className="px-5 py-5 border-b border-white/10 flex-shrink-0">
           <Link href="/" className="font-display text-white text-[16px] font-bold tracking-wider">
-            CROPADVISOR
+            FIELDAGENT
           </Link>
           <p className="text-white/40 text-[11px] mt-0.5">Agent Dashboard</p>
         </div>

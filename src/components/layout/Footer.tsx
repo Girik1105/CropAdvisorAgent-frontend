@@ -7,7 +7,7 @@ export default function Footer() {
         {/* Left: Brand + tagline */}
         <div>
           <Link href="/" className="font-display text-primary text-[16px] font-bold tracking-wider">
-            CROPADVISOR
+            FIELDAGENT
           </Link>
           <p className="font-editorial italic text-text/30 text-[13px] mt-1">
             Intelligence for the land that feeds us

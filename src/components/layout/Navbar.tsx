@@ -19,7 +19,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto h-full px-6 flex items-center">
         {/* Logo */}
         <Link href="/" className="font-display text-primary text-[20px] font-bold tracking-wider">
-          CROPADVISOR
+          FIELDAGENT
         </Link>
 
         {/* Nav links */}

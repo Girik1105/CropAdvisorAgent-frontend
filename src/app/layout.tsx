@@ -25,7 +25,7 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: 'CropAdvisor — Intelligence for the Land',
+  title: 'FieldAgent — Intelligence for the Land',
   description:
     'AI-powered agricultural agent that checks weather, satellite crop health, and soil data to deliver actionable farming recommendations via SMS.',
 }
