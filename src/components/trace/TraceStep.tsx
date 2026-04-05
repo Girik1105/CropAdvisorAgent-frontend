@@ -145,19 +145,29 @@ function CropMetrics({ output, visible }: { output: Record<string, unknown>; vis
 function SoilMetrics({ output, visible }: { output: Record<string, unknown>; visible: boolean }) {
   const ph = useCountUp(Number(output.ph) || 0, 600, visible)
   const organicMatter = Number(output.organic_matter_pct) || 0
+  const source = String(output.data_source || '')
 
   return (
-    <div className="flex items-start gap-8 mt-3">
-      <MetricItem value={`pH ${ph}`} label="acidity" />
-      <div className="flex flex-col">
-        <span className="text-[20px] font-bold text-[#2C2C28] capitalize">{String(output.soil_type || output.drainage_class || '—')}</span>
-        <span className="text-[11px] text-[#2C2C28]/35 mt-0.5">soil type</span>
+    <div className="mt-3">
+      {source && source !== 'default' && (
+        <div className="mb-2">
+          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+            {source}
+          </span>
+        </div>
+      )}
+      <div className="flex items-start gap-8">
+        <MetricItem value={`pH ${ph}`} label="acidity" />
+        <div className="flex flex-col">
+          <span className="text-[20px] font-bold text-[#2C2C28] capitalize">{String(output.soil_type || output.drainage_class || '—')}</span>
+          <span className="text-[11px] text-[#2C2C28]/35 mt-0.5">soil type</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[20px] font-bold text-[#2C2C28]">{String(output.water_holding_capacity || '—')}</span>
+          <span className="text-[11px] text-[#2C2C28]/35 mt-0.5">water capacity</span>
+        </div>
+        {organicMatter > 0 && <MetricItem value={organicMatter} suffix="%" label="organic matter" />}
       </div>
-      <div className="flex flex-col">
-        <span className="text-[20px] font-bold text-[#2C2C28]">{String(output.water_holding_capacity || '—')}</span>
-        <span className="text-[11px] text-[#2C2C28]/35 mt-0.5">water capacity</span>
-      </div>
-      {organicMatter > 0 && <MetricItem value={organicMatter} suffix="%" label="organic matter" />}
     </div>
   )
 }
@@ -228,11 +238,26 @@ function WaterMetrics({ output, visible }: { output: Record<string, unknown>; vi
   const dailyNeed = useCountUp(Number(output.daily_water_need_gal) || 0, 600, visible)
   const deficit = useCountUp(Number(output.current_deficit_pct) || 0, 600, visible)
   const cost = Number(output.estimated_daily_cost) || 0
+  const source = String(output.data_source || '')
+  const et0 = Number(output.et0_mm_per_day) || 0
+  const etc = Number(output.etc_mm_per_day) || 0
 
   const deficitColor = Number(output.current_deficit_pct) > 50 ? 'text-red-600' : Number(output.current_deficit_pct) > 30 ? 'text-amber-600' : 'text-emerald-600'
 
   return (
     <div className="mt-3">
+      {source === 'NASA POWER' && (
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700">
+            NASA POWER
+          </span>
+          {et0 > 0 && (
+            <span className="text-[10px] text-text/40 font-mono">
+              ET₀ {et0} mm/day · ETc {etc} mm/day · Kc {String(output.crop_coefficient || '')}
+            </span>
+          )}
+        </div>
+      )}
       <div className="flex items-start gap-8">
         <MetricItem value={dailyNeed.toLocaleString()} suffix="gal/day" label="water need" />
         <div className="flex flex-col">
