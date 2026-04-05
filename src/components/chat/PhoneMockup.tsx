@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { useConversation } from '@11labs/react'
+import { Conversation } from '@elevenlabs/client'
+import type { Status } from '@elevenlabs/client'
 import { Message, AgentResponse } from '@/lib/types'
 import { api } from '@/lib/api'
 import MessageBubble from './MessageBubble'
@@ -16,23 +17,24 @@ const PHONE_ICON = "M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67
 const BAR_COUNT = 8
 
 function CallTab() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionRef = useRef<any>(null)
+  const [status, setStatus] = useState<Status>('disconnected')
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [seconds, setSeconds] = useState(0)
   const barRefs = useRef<(HTMLDivElement | null)[]>([])
   const rafIdRef = useRef<number>(0)
 
-  const conversation = useConversation({
-    onConnect: () => setError(null),
-    onDisconnect: (details) => {
-      if (details.reason === 'error') {
-        setError((details as { message?: string }).message ?? 'Connection lost')
-      }
-    },
-    onError: (message) => setError(message),
-  })
-
-  const status = conversation.status
   const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID
+
+  // Clean up session on unmount (e.g., tab switch ends call)
+  useEffect(() => {
+    return () => {
+      sessionRef.current?.endSession().catch(() => {})
+      sessionRef.current = null
+    }
+  }, [])
 
   // Timer — only ticks while connected
   useEffect(() => {
@@ -41,12 +43,13 @@ function CallTab() {
     return () => clearInterval(interval)
   }, [status])
 
-  // Waveform driven by real audio levels
+  // Waveform driven by real audio levels via rAF
   useEffect(() => {
-    if (status !== 'connected') return
+    if (status !== 'connected' || !sessionRef.current) return
+    const session = sessionRef.current
     const animate = () => {
-      const vol = Math.max(conversation.getInputVolume(), conversation.getOutputVolume())
-      barRefs.current.forEach((bar, i) => {
+      const vol = Math.max(session.getInputVolume(), session.getOutputVolume())
+      barRefs.current.forEach((bar: HTMLDivElement | null, i: number) => {
         if (!bar) return
         const offset = Math.sin(Date.now() / 200 + i * 0.8) * 0.3
         const h = Math.max(15, Math.min(90, vol * 100 + offset * 40))
@@ -56,7 +59,7 @@ function CallTab() {
     }
     rafIdRef.current = requestAnimationFrame(animate)
     return () => cancelAnimationFrame(rafIdRef.current)
-  }, [status, conversation])
+  }, [status])
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
@@ -68,15 +71,45 @@ function CallTab() {
     if (!agentId) { setError('Agent not configured'); return }
     setError(null)
     try {
-      await conversation.startSession({ agentId })
+      const session = await Conversation.startSession({
+        agentId,
+        onConnect: ({ conversationId }) => {
+          console.log('[CropAdvisor] Voice connected:', conversationId)
+        },
+        onDisconnect: (details) => {
+          console.log('[CropAdvisor] Voice disconnected:', details)
+          sessionRef.current = null
+          if (details.reason === 'error') {
+            setError((details as { message?: string }).message ?? 'Connection lost')
+          }
+        },
+        onError: (message, context) => {
+          console.error('[CropAdvisor] Voice error:', message, context)
+          setError(message)
+        },
+        onStatusChange: ({ status: s }) => setStatus(s),
+        onModeChange: ({ mode }) => setIsSpeaking(mode === 'speaking'),
+      })
+      sessionRef.current = session
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to connect'
-      setError(msg.includes('Permission') || msg.includes('NotAllowed') ? 'Microphone access denied' : msg)
+      console.error('[CropAdvisor] startSession failed:', err)
+      setStatus('disconnected')
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('Permission') || msg.includes('NotAllowed')) {
+        setError('Microphone access denied')
+      } else if (msg.includes('401')) {
+        setError('Agent auth error — set to public in ElevenLabs')
+      } else if (msg.includes('404')) {
+        setError('Agent not found — check agent ID')
+      } else {
+        setError(msg)
+      }
     }
   }
 
   const handleHangup = async () => {
-    try { await conversation.endSession() } catch { /* session may already be closed */ }
+    try { await sessionRef.current?.endSession() } catch { /* already closed */ }
+    sessionRef.current = null
   }
 
   // ── Idle / disconnected ──
@@ -128,7 +161,7 @@ function CallTab() {
         </div>
         <p className="text-white text-[15px] font-medium">CropAdvisor</p>
         <p className="text-white/30 text-[11px] mt-0.5">
-          {conversation.isSpeaking ? 'Agent is speaking...' : 'Listening...'}
+          {isSpeaking ? 'Agent is speaking...' : 'Listening...'}
         </p>
 
         {/* Timer */}
