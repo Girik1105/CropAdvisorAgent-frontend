@@ -32,9 +32,9 @@ body {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.hero-headline { animation: hero-up 600ms ease-out both; }
-.hero-subtitle { animation: hero-up 600ms ease-out 300ms both; }
-.hero-ctas { animation: hero-up 600ms ease-out 500ms both; }
+.hero-headline { animation: hero-up 700ms ease-out 0.4s both; }
+.hero-subtitle { animation: hero-up 700ms ease-out 0.7s both; }
+.hero-ctas { animation: hero-up 700ms ease-out 1.0s both; }
 
 /* ── Demo section scroll-triggered fade ── */
 .demo-fade {
@@ -114,5 +114,26 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #D9D3C4; border-radius: 3px; }
 
-/* ── Smooth scroll ── */
-html { scroll-behavior: smooth; }
+/* ── Hero contour draw-in ── */
+@keyframes contour-draw {
+  from { stroke-dashoffset: 1; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+.contour-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: contour-draw 2s ease-out forwards;
+}
+.contour-path:nth-child(1) { animation-delay: 0.3s; }
+.contour-path:nth-child(2) { animation-delay: 0.6s; }
+.contour-path:nth-child(3) { animation-delay: 0.9s; }
+.contour-path:nth-child(4) { animation-delay: 1.2s; }
+
+/* ── Hero glow ── */
+@keyframes glow-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+.hero-glow {
+  animation: glow-in 1.5s ease-out 0.2s both;
+}

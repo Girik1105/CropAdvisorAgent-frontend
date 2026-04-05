@@ -42,21 +42,42 @@ export default function Home() {
     <>
       {/* ════════════════ HERO ════════════════ */}
       <section className="h-[calc(100vh-64px)] flex flex-col items-center justify-center px-6 relative overflow-hidden">
-        {/* Decorative topo contours */}
+        {/* Decorative topo contours — bottom right */}
         <svg
           className="absolute bottom-0 right-0 w-[600px] h-[500px] pointer-events-none"
           viewBox="0 0 600 500"
           fill="none"
-          style={{ opacity: 0.05 }}
+          style={{ opacity: 0.08 }}
+          pathLength="1"
         >
-          <path d="M420,80 C500,50 570,110 580,200 C590,290 540,370 460,400 C380,430 290,390 260,300 C230,210 300,110 420,80Z" stroke="#2D4A3E" strokeWidth="1" />
-          <path d="M410,120 C470,100 520,140 528,210 C536,280 500,330 440,350 C380,370 320,340 300,280 C280,220 340,130 410,120Z" stroke="#2D4A3E" strokeWidth="1" />
-          <path d="M405,160 C445,148 480,172 485,220 C490,268 465,300 425,310 C385,320 350,300 340,255 C330,210 370,165 405,160Z" stroke="#2D4A3E" strokeWidth="1" />
-          <path d="M408,195 C430,188 450,205 453,230 C456,255 443,272 425,278 C407,284 390,272 385,248 C380,224 392,198 408,195Z" stroke="#2D4A3E" strokeWidth="1" />
+          <path className="contour-path" d="M420,80 C500,50 570,110 580,200 C590,290 540,370 460,400 C380,430 290,390 260,300 C230,210 300,110 420,80Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
+          <path className="contour-path" d="M410,120 C470,100 520,140 528,210 C536,280 500,330 440,350 C380,370 320,340 300,280 C280,220 340,130 410,120Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
+          <path className="contour-path" d="M405,160 C445,148 480,172 485,220 C490,268 465,300 425,310 C385,320 350,300 340,255 C330,210 370,165 405,160Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
+          <path className="contour-path" d="M408,195 C430,188 450,205 453,230 C456,255 443,272 425,278 C407,284 390,272 385,248 C380,224 392,198 408,195Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
         </svg>
 
+        {/* Decorative topo contours — top left */}
+        <svg
+          className="absolute top-0 left-0 w-[500px] h-[400px] pointer-events-none"
+          viewBox="0 0 500 400"
+          fill="none"
+          style={{ opacity: 0.06 }}
+        >
+          <path className="contour-path" d="M80,320 C20,280 -10,200 30,120 C70,40 160,10 240,40 C320,70 350,160 310,240 C270,320 140,360 80,320Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
+          <path className="contour-path" d="M100,290 C50,260 30,200 60,140 C90,80 160,55 220,75 C280,95 305,170 275,230 C245,290 150,320 100,290Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
+          <path className="contour-path" d="M120,260 C85,240 70,195 90,155 C110,115 160,95 200,110 C240,125 255,175 240,210 C225,245 155,275 120,260Z" stroke="#2D4A3E" strokeWidth="1" pathLength="1" />
+        </svg>
+
+        {/* Soft radial glow behind headline */}
+        <div
+          className="hero-glow absolute w-[600px] h-[400px] pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse at center, rgba(45,74,62,0.06) 0%, transparent 70%)',
+          }}
+        />
+
         {/* Content */}
-        <h1 className="hero-headline font-display text-[48px] lg:text-[56px] font-bold text-text text-center leading-tight max-w-3xl">
+        <h1 className="hero-headline font-display text-[48px] lg:text-[56px] font-bold text-text text-center leading-tight max-w-3xl relative">
           Intelligence for the land<br />that feeds us
         </h1>
 
