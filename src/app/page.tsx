@@ -5,6 +5,8 @@ import PhoneMockup from '@/components/chat/PhoneMockup'
 import TraceViewer from '@/components/trace/TraceViewer'
 import RecommendationCard from '@/components/recommendation/RecommendationCard'
 import { AgentResponse } from '@/lib/types'
+import { api } from '@/lib/api'
+import VoiceWidget from '@/components/chat/VoiceWidget'
 
 export default function Home() {
   const [response, setResponse] = useState<AgentResponse | null>(null)
@@ -29,9 +31,17 @@ export default function Home() {
     return () => observer.disconnect()
   }, [])
 
-  const handleResponse = (res: AgentResponse) => {
+  const handleResponse = async (res: AgentResponse) => {
     setTraceComplete(false)
     setResponse(res)
+
+    // Fetch trace separately if empty (real backend flow)
+    if (res.trace.length === 0 && res.session_id) {
+      const trace = await api.getTraceSteps(res.session_id)
+      if (trace.length > 0) {
+        setResponse((prev) => (prev ? { ...prev, trace } : prev))
+      }
+    }
   }
 
   const totalDuration = response
@@ -93,7 +103,7 @@ export default function Home() {
             Try the demo
           </button>
           <a
-            href="tel:+16025550100"
+            href="tel:+16812911561"
             className="border-2 border-accent text-accent hover:bg-accent/5 text-[15px] font-semibold px-7 py-3 rounded-full transition-colors"
           >
             Call the agent
@@ -132,8 +142,9 @@ export default function Home() {
 
               <div className="mt-6 text-center">
                 <p className="text-[12px] text-text/30">Or call the agent directly</p>
-                <p className="text-[16px] font-bold text-accent mt-0.5">(602) 555-0100</p>
+                <p className="text-[16px] font-bold text-accent mt-0.5">(681) 291-1561</p>
                 <p className="text-[11px] text-text/20 mt-1">Powered by ElevenLabs</p>
+                <VoiceWidget />
               </div>
             </div>
 

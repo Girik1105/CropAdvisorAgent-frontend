@@ -25,7 +25,8 @@ const toolConfig: Record<string, { label: string; borderColor: string; bgClass: 
 function WeatherMetrics({ output, visible }: { output: Record<string, unknown>; visible: boolean }) {
   const temp = useCountUp(Number(output.temp_f) || 0, 600, visible)
   const humidity = useCountUp(Number(output.humidity_pct) || 0, 600, visible)
-  const rain = useCountUp(Number(output.precipitation_7d_in) || 0, 600, visible)
+  const rawPrecip = output.precipitation_7d_in ?? output.precipitation_forecast
+  const rain = useCountUp(typeof rawPrecip === 'number' ? rawPrecip : 0, 600, visible)
 
   return (
     <div className="flex items-baseline gap-6 mt-2">
@@ -46,12 +47,13 @@ function WeatherMetrics({ output, visible }: { output: Record<string, unknown>; 
 }
 
 function CropMetrics({ output, visible }: { output: Record<string, unknown>; visible: boolean }) {
-  const ndvi = useCountUp(Number(output.ndvi) || 0, 600, visible)
-  const affected = useCountUp(Number(output.affected_area_pct) || 0, 600, visible)
-  const ndviPct = (Number(output.ndvi) || 0) * 100
+  const ndviRaw = Number(output.ndvi ?? output.ndvi_score) || 0
+  const ndvi = useCountUp(ndviRaw, 600, visible)
+  const affected = useCountUp(Number(output.affected_area_pct ?? output.vegetation_fraction) || 0, 600, visible)
+  const ndviPct = ndviRaw * 100
 
   // NDVI color: green ≥0.6, amber 0.4–0.6, red <0.4
-  const ndviFull = Number(output.ndvi) || 0
+  const ndviFull = ndviRaw
   const barColor = ndviFull >= 0.6 ? '#5B7C6B' : ndviFull >= 0.4 ? '#D4915E' : '#B85C3E'
 
   return (
@@ -99,7 +101,7 @@ function CropMetrics({ output, visible }: { output: Record<string, unknown>; vis
 }
 
 function SoilMetrics({ output, visible }: { output: Record<string, unknown>; visible: boolean }) {
-  const moisture = useCountUp(Number(output.moisture_pct) || 0, 600, visible)
+  const moisture = useCountUp(Number(output.moisture_pct ?? output.available_water_in_per_ft) || 0, 600, visible)
   const ph = useCountUp(Number(output.ph) || 0, 600, visible)
   const nitrogen = useCountUp(Number(output.nitrogen_ppm) || 0, 600, visible)
 

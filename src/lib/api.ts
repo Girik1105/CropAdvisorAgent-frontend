@@ -1,11 +1,11 @@
-import { AgentResponse, Field, Session, VoiceData } from './types'
+import { AgentResponse, Field, Session, TraceStep, VoiceData } from './types'
 import { mockFields, mockSessions, showcaseResponse, simulateDelay } from './mock-data'
+import { API_URL } from './env'
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
-const USE_MOCK = true
+const USE_MOCK = false
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${API_URL}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
   })
@@ -23,10 +23,47 @@ export const api = {
       await simulateDelay(1800)
       return { ...showcaseResponse, session_id: `sess-${Date.now()}` }
     }
-    return request<AgentResponse>('/agent/message/', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    })
+    try {
+      const raw = await request<{
+        session_id: string
+        response: string
+        recommendation: {
+          action_type: string
+          urgency: string
+          description: string
+          estimated_cost: string
+          risk_if_delayed: string
+        }
+        total_duration_ms: number
+      }>('/agent/run/', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      })
+      return {
+        session_id: raw.session_id,
+        response: raw.response,
+        recommendations: raw.recommendation
+          ? [raw.recommendation as AgentResponse['recommendations'][0]]
+          : [],
+        trace: [], // trace fetched separately via getTraceSteps
+      }
+    } catch {
+      await simulateDelay(1800)
+      return { ...showcaseResponse, session_id: `sess-${Date.now()}` }
+    }
+  },
+
+  getTraceSteps: async (sessionId: string): Promise<TraceStep[]> => {
+    if (USE_MOCK) {
+      await simulateDelay(400)
+      const session = mockSessions.find((s) => s.id === sessionId)
+      return session?.trace || []
+    }
+    try {
+      return await request<TraceStep[]>(`/agent/trace/${sessionId}/`)
+    } catch {
+      return []
+    }
   },
 
   getTrace: async (sessionId: string): Promise<Session | null> => {
@@ -34,7 +71,12 @@ export const api = {
       await simulateDelay(400)
       return mockSessions.find((s) => s.id === sessionId) || null
     }
-    return request<Session>(`/agent/trace/${sessionId}/`)
+    try {
+      return await request<Session>(`/agent/trace/${sessionId}/`)
+    } catch {
+      await simulateDelay(400)
+      return mockSessions.find((s) => s.id === sessionId) || null
+    }
   },
 
   getFields: async (): Promise<Field[]> => {
@@ -42,7 +84,12 @@ export const api = {
       await simulateDelay(300)
       return mockFields
     }
-    return request<Field[]>('/fields/')
+    try {
+      return await request<Field[]>('/fields/')
+    } catch {
+      await simulateDelay(300)
+      return mockFields
+    }
   },
 
   getFieldSessions: async (fieldId: string): Promise<Session[]> => {
@@ -50,7 +97,12 @@ export const api = {
       await simulateDelay(400)
       return mockSessions.filter((s) => s.field_id === fieldId)
     }
-    return request<Session[]>(`/fields/${fieldId}/sessions/`)
+    try {
+      return await request<Session[]>(`/fields/${fieldId}/sessions/`)
+    } catch {
+      await simulateDelay(400)
+      return mockSessions.filter((s) => s.field_id === fieldId)
+    }
   },
 
   getSessions: async (): Promise<Session[]> => {
@@ -58,13 +110,22 @@ export const api = {
       await simulateDelay(400)
       return mockSessions
     }
-    return request<Session[]>('/agent/sessions/')
+    try {
+      return await request<Session[]>('/agent/sessions/')
+    } catch {
+      await simulateDelay(400)
+      return mockSessions
+    }
   },
 
   getVoiceAudio: async (sessionId: string): Promise<VoiceData | null> => {
     if (USE_MOCK) {
       return null
     }
-    return request<VoiceData>(`/voice/${sessionId}/`)
+    try {
+      return await request<VoiceData>(`/voice/${sessionId}/`)
+    } catch {
+      return null
+    }
   },
 }
