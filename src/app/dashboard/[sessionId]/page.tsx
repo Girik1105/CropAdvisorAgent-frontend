@@ -23,7 +23,7 @@ export default function SessionDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-5xl pt-16 lg:pt-8">
         <div className="animate-pulse space-y-6">
           <div className="h-6 bg-grid rounded w-1/4" />
           <div className="h-4 bg-grid rounded w-1/2" />
@@ -35,9 +35,9 @@ export default function SessionDetailPage() {
 
   if (!session) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-10 text-center">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-5xl pt-16 lg:pt-8 text-center">
         <p className="text-text/50 text-[15px]">Session not found</p>
-        <Link href="/dashboard" className="text-accent text-[14px] mt-2 inline-block hover:underline">
+        <Link href="/dashboard/sessions" className="text-accent text-[14px] mt-2 inline-block hover:underline">
           Back to sessions
         </Link>
       </div>
@@ -45,10 +45,10 @@ export default function SessionDetailPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-5xl pt-16 lg:pt-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6">
-        <Link href="/dashboard" className="text-[12px] text-text/40 hover:text-text transition-colors">
+        <Link href="/dashboard/sessions" className="text-[12px] text-text/40 hover:text-text transition-colors">
           Sessions
         </Link>
         <span className="text-grid">/</span>

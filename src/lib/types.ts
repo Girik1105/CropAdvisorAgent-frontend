@@ -63,3 +63,39 @@ export interface Message {
   role: 'user' | 'agent'
   content: string
 }
+
+export interface WeatherSnapshot {
+  id: string
+  field: string
+  temp_f: number
+  temp_c: number
+  humidity_pct: number
+  wind_mph: number
+  conditions: string
+  uv_index: number | null
+  precipitation_forecast: { date: string; precip_in: number; prob_pct: number }[]
+  created_at: string
+}
+
+export interface CropHealthRecord {
+  id: string
+  field: string
+  ndvi_score: number
+  stress_level: string
+  vegetation_trend: string
+  vegetation_fraction: number
+  last_satellite_date: string | null
+  created_at: string
+}
+
+export interface SoilProfile {
+  id: string
+  field: string
+  soil_type: string
+  ph: number
+  organic_matter_pct: number
+  drainage_class: string
+  water_holding_capacity: string
+  available_water_in_per_ft: number
+  updated_at: string
+}

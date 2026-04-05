@@ -19,7 +19,7 @@ export default function Footer() {
           <Link href="/#demo" className="text-[13px] text-text/40 hover:text-primary transition-colors">
             Demo
           </Link>
-          <Link href="/dashboard" className="text-[13px] text-text/40 hover:text-primary transition-colors">
+          <Link href="/sessions" className="text-[13px] text-text/40 hover:text-primary transition-colors">
             Sessions
           </Link>
           <Link href="/fields" className="text-[13px] text-text/40 hover:text-primary transition-colors">

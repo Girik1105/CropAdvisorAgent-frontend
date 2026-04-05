@@ -1,14 +1,30 @@
-import { AgentResponse, Field, Session, TraceStep, VoiceData } from './types'
+import { AgentResponse, Field, Session, TraceStep, VoiceData, WeatherSnapshot, CropHealthRecord, SoilProfile } from './types'
 import { mockFields, mockSessions, showcaseResponse, simulateDelay } from './mock-data'
 import { API_URL } from './env'
+import { getAccessToken, refreshAccessToken, clearTokens } from './auth'
 
 const USE_MOCK = false
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function request<T>(path: string, options?: RequestInit, retry = true): Promise<T> {
+  const token = getAccessToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...options,
+    headers: { ...headers, ...(options?.headers as Record<string, string>) },
   })
+
+  if (res.status === 401 && retry) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) return request<T>(path, options, false)
+    clearTokens()
+    if (typeof window !== 'undefined') window.location.href = '/login'
+    throw new Error('Session expired')
+  }
+
   if (!res.ok) throw new Error(`API error: ${res.status}`)
   return res.json()
 }
@@ -124,6 +140,30 @@ export const api = {
     }
     try {
       return await request<VoiceData>(`/voice/${sessionId}/`)
+    } catch {
+      return null
+    }
+  },
+
+  getFieldWeather: async (fieldId: string): Promise<WeatherSnapshot[]> => {
+    try {
+      return await request<WeatherSnapshot[]>(`/fields/${fieldId}/weather/`)
+    } catch {
+      return []
+    }
+  },
+
+  getFieldCropHealth: async (fieldId: string): Promise<CropHealthRecord[]> => {
+    try {
+      return await request<CropHealthRecord[]>(`/fields/${fieldId}/crop-health/`)
+    } catch {
+      return []
+    }
+  },
+
+  getFieldSoil: async (fieldId: string): Promise<SoilProfile | null> => {
+    try {
+      return await request<SoilProfile>(`/fields/${fieldId}/soil/`)
     } catch {
       return null
     }

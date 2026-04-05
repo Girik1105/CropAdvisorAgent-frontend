@@ -2,15 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@/lib/auth'
 
 const navItems = [
-  { href: '/#demo', label: 'Demo', matchPath: '/' },
-  { href: '/dashboard', label: 'Sessions', matchPath: '/dashboard' },
-  { href: '/fields', label: 'Fields', matchPath: '/fields' },
+  { href: '/#demo', label: 'Demo', matchPath: '/', exact: true },
+  { href: '/sessions', label: 'Sessions', matchPath: '/sessions', exact: false },
+  { href: '/fields', label: 'Fields', matchPath: '/fields', exact: false },
 ]
 
 export default function Navbar() {
   const pathname = usePathname()
+  const { loggedIn } = useAuth()
 
   return (
     <nav className="fixed top-0 w-full z-50 h-16 bg-bg/80 backdrop-blur-sm border-b border-grid">
@@ -23,7 +25,9 @@ export default function Navbar() {
         {/* Nav links */}
         <div className="flex items-center gap-8 ml-12">
           {navItems.map((item) => {
-            const isActive = pathname === item.matchPath
+            const isActive = item.exact
+              ? pathname === item.matchPath
+              : pathname === item.matchPath || (item.matchPath !== '/' && pathname.startsWith(item.matchPath))
             return (
               <Link
                 key={item.href}
@@ -48,8 +52,8 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* Call Agent button */}
-        <div className="ml-auto">
+        {/* Right side */}
+        <div className="ml-auto flex items-center gap-4">
           <a
             href="tel:+16812911561"
             className="bg-accent hover:bg-accent/90 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full transition-colors inline-flex items-center gap-2"
@@ -57,8 +61,24 @@ export default function Navbar() {
             <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
               <path d="M3.65 1.55a1.5 1.5 0 0 1 2.12 0l1.06 1.06a1.5 1.5 0 0 1 0 2.12L5.77 5.79a8.3 8.3 0 0 0 4.44 4.44l1.06-1.06a1.5 1.5 0 0 1 2.12 0l1.06 1.06a1.5 1.5 0 0 1 0 2.12l-.7.71a2.5 2.5 0 0 1-2.65.65A13.2 13.2 0 0 1 3.23 5.84a2.5 2.5 0 0 1 .65-2.65z" />
             </svg>
-            Call Agent (681) 291-1561
+            Call Agent
           </a>
+
+          {loggedIn ? (
+            <Link
+              href="/dashboard"
+              className="bg-primary/10 text-primary text-[13px] font-semibold px-5 py-2.5 rounded-full hover:bg-primary/15 transition-colors"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-[13px] text-text/45 hover:text-text/70 font-medium transition-colors"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </div>
     </nav>

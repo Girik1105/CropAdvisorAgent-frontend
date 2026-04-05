@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Outfit, IBM_Plex_Mono, Instrument_Serif } from 'next/font/google'
-import Navbar from '@/components/layout/Navbar'
-import Footer from '@/components/layout/Footer'
+import AuthProvider from '@/components/AuthProvider'
 import './globals.css'
 
 const outfit = Outfit({
@@ -39,11 +38,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${outfit.variable} ${ibmPlexMono.variable} ${instrumentSerif.variable} font-body antialiased min-h-screen flex flex-col`}
+        className={`${outfit.variable} ${ibmPlexMono.variable} ${instrumentSerif.variable} font-body antialiased min-h-screen`}
       >
-        <Navbar />
-        <main className="pt-16 flex-1">{children}</main>
-        <Footer />
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )
