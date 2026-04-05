@@ -73,37 +73,25 @@ function traceToSession(trace: BackendTrace): Session {
 }
 
 export const api = {
-  sendMessage: async (body: {
+  /** Kick off a health check — returns immediately with session_id. Poll with getHealthCheckStatus. */
+  startHealthCheck: async (body: {
     message: string
     field_id?: string
-  }): Promise<AgentResponse> => {
-    if (USE_MOCK) {
-      await simulateDelay(1800)
-      return { ...showcaseResponse, session_id: `sess-${Date.now()}` }
-    }
-    const raw = await request<{
-      session_id: string
-      response: string
-      recommendation: {
-        action_type: string
-        urgency: string
-        description: string
-        estimated_cost: string
-        risk_if_delayed: string
-      }
-      total_duration_ms: number
-    }>('/agent/message/', {
+  }): Promise<{ session_id: string; status: string }> => {
+    return request<{ session_id: string; status: string }>('/agent/message/', {
       method: 'POST',
       body: JSON.stringify(body),
     })
-    return {
-      session_id: raw.session_id,
-      response: raw.response,
-      recommendations: raw.recommendation
-        ? [raw.recommendation as AgentResponse['recommendations'][0]]
-        : [],
-      trace: [],
-    }
+  },
+
+  /** Poll health check status. Returns status + result when completed. */
+  getHealthCheckStatus: async (sessionId: string): Promise<{
+    session_id: string
+    status: 'processing' | 'completed' | 'failed'
+    result?: { session_id: string; response: string; recommendation: Record<string, unknown>; total_duration_ms: number }
+    error?: string
+  }> => {
+    return request(`/agent/status/${sessionId}/`)
   },
 
   getTrace: async (sessionId: string): Promise<Session | null> => {
@@ -165,7 +153,13 @@ export const api = {
         phone_number: s.phone_number,
         field: s.field_id,
         field_name: s.field_name,
+        crop_type: '',
         channel: s.channel as 'sms' | 'dashboard',
+        status: 'completed' as const,
+        message: null,
+        recommendation_action: null,
+        recommendation_urgency: null,
+        tool_count: 0,
         created_at: s.created_at,
         updated_at: s.created_at,
       }))
@@ -198,6 +192,25 @@ export const api = {
         updated_at: summary.updated_at,
         total_duration_ms: 0,
       }
+    }
+  },
+
+  chatWithAgent: async (body: {
+    message: string
+    field_id?: string
+  }): Promise<{ session_id: string; response: string }> => {
+    return request<{ session_id: string; response: string }>('/agent/chat/', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+  },
+
+  getChatHistory: async (fieldId: string): Promise<{ id: string; role: string; content: string; created_at: string }[]> => {
+    try {
+      const res = await request<{ messages: { id: string; role: string; content: string; created_at: string }[] }>(`/agent/chat/?field_id=${fieldId}`)
+      return res.messages
+    } catch {
+      return []
     }
   },
 

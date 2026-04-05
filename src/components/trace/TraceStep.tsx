@@ -176,12 +176,22 @@ function MarketMetrics({ output }: { output: Record<string, unknown> }) {
   const price = Number(output.price_per_unit) || 0
   const trend = String(output.trend_30d || '—')
   const unit = String(output.unit || '')
+  const source = String(output.data_source || '')
+  const period = String(output.period || '')
 
   const trendColor = trend.includes('up') ? 'text-emerald-600' : trend.includes('down') ? 'text-red-500' : 'text-text/60'
   const trendIcon = trend.includes('up') ? '↑' : trend.includes('down') ? '↓' : '→'
 
   return (
     <div className="mt-3">
+      {source === 'USDA NASS' && (
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+            USDA NASS
+          </span>
+          {period && <span className="text-[10px] text-text/35 font-mono">{period}</span>}
+        </div>
+      )}
       <div className="flex items-start gap-8">
         <MetricItem value={`$${price}`} suffix={`/${unit}`} label="current price" />
         <div className="flex flex-col">

@@ -7,6 +7,7 @@ import MessageBubble from './MessageBubble'
 
 interface PhoneMockupProps {
   onResponse?: (response: AgentResponse) => void
+  useMock?: boolean
 }
 
 // ── Call Tab ──
@@ -89,7 +90,7 @@ function CallTab() {
 }
 
 // ── Main PhoneMockup ──
-export default function PhoneMockup({ onResponse }: PhoneMockupProps) {
+export default function PhoneMockup({ onResponse, useMock = false }: PhoneMockupProps) {
   const [activeTab, setActiveTab] = useState<'text' | 'call'>('text')
   const [messages, setMessages] = useState<Message[]>([
     { id: 'seed-1', role: 'user', content: "How's my cotton field looking?" },
@@ -142,14 +143,42 @@ export default function PhoneMockup({ onResponse }: PhoneMockupProps) {
 
     setIsThinking(true)
 
+    if (useMock) {
+      // Use mock data — no API call needed
+      const { showcaseResponse } = await import('@/lib/mock-data')
+      await new Promise((r) => setTimeout(r, 2000))
+      setIsThinking(false)
+      onResponse?.(showcaseResponse)
+      await typeResponse(showcaseResponse.response)
+      return
+    }
+
     try {
-      const response = await api.sendMessage({
-        message: text,
-      })
+      const { session_id } = await api.startHealthCheck({ message: text })
+
+      // Poll until done
+      let result = null
+      for (let i = 0; i < 30; i++) {
+        await new Promise((r) => setTimeout(r, 2000))
+        const status = await api.getHealthCheckStatus(session_id)
+        if (status.status === 'completed' && status.result) {
+          result = status.result
+          break
+        }
+        if (status.status === 'failed') throw new Error(status.error)
+      }
 
       setIsThinking(false)
-      onResponse?.(response)
-      await typeResponse(response.response)
+      if (result) {
+        const agentResponse = {
+          session_id,
+          response: result.response,
+          recommendations: result.recommendation ? [result.recommendation as unknown as AgentResponse['recommendations'][0]] : [],
+          trace: [],
+        }
+        onResponse?.(agentResponse)
+        await typeResponse(result.response)
+      }
     } catch {
       setIsThinking(false)
       setMessages((prev) => [

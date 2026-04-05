@@ -16,14 +16,17 @@ export default function Footer() {
 
         {/* Center: Links */}
         <div className="flex items-center gap-6">
-          <Link href="/#demo" className="text-[13px] text-text/40 hover:text-primary transition-colors">
+          <Link href="/#how-it-works" className="text-[13px] text-text/40 hover:text-primary transition-colors">
+            How It Works
+          </Link>
+          <Link href="/#features" className="text-[13px] text-text/40 hover:text-primary transition-colors">
+            Features
+          </Link>
+          <Link href="/demo" className="text-[13px] text-text/40 hover:text-primary transition-colors">
             Demo
           </Link>
-          <Link href="/sessions" className="text-[13px] text-text/40 hover:text-primary transition-colors">
-            Sessions
-          </Link>
-          <Link href="/fields" className="text-[13px] text-text/40 hover:text-primary transition-colors">
-            Fields
+          <Link href="/login" className="text-[13px] text-text/40 hover:text-primary transition-colors">
+            Sign In
           </Link>
         </div>
 
@@ -33,7 +36,7 @@ export default function Footer() {
             Innovation Hacks 2.0 &middot; ASU &middot; April 2026
           </p>
           <p className="font-mono text-[11px] text-text/25 mt-0.5">
-            Powered by Gemini &middot; ElevenLabs &middot; Sentinel-2
+            Powered by Gemini &middot; OpenWeatherMap &middot; USDA SSURGO &middot; NASA POWER
           </p>
         </div>
       </div>

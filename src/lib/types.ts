@@ -50,7 +50,13 @@ export interface SessionSummary {
   phone_number: string
   field: string
   field_name: string
-  channel: 'sms' | 'dashboard'
+  crop_type: string
+  channel: 'sms' | 'dashboard' | 'chat'
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  message: string | null
+  recommendation_action: ActionType | null
+  recommendation_urgency: Urgency | null
+  tool_count: number
   created_at: string
   updated_at: string
 }

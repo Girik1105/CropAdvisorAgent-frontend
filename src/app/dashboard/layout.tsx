@@ -8,21 +8,8 @@ import useRequireAuth from '@/hooks/useRequireAuth'
 
 const sidebarItems = [
   {
-    href: '/dashboard',
-    label: 'Overview',
-    icon: (
-      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="1.5" y="1.5" width="5" height="5" rx="1" />
-        <rect x="9.5" y="1.5" width="5" height="5" rx="1" />
-        <rect x="1.5" y="9.5" width="5" height="5" rx="1" />
-        <rect x="9.5" y="9.5" width="5" height="5" rx="1" />
-      </svg>
-    ),
-    exact: true,
-  },
-  {
     href: '/dashboard/fields',
-    label: 'Fields',
+    label: 'Home',
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M2 14V6l6-4 6 4v8H2z" />
@@ -33,10 +20,21 @@ const sidebarItems = [
   },
   {
     href: '/dashboard/sessions',
-    label: 'Sessions',
+    label: 'Health Reports',
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M2 3h12M2 8h12M2 13h8" />
+        <path d="M4 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" />
+        <path d="M6 5h4M6 8h4M6 11h2" />
+      </svg>
+    ),
+    exact: false,
+  },
+  {
+    href: '/dashboard/ask',
+    label: 'Ask Agent',
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M2 3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H5l-3 3V3z" />
       </svg>
     ),
     exact: false,
@@ -96,7 +94,7 @@ export default function DashboardLayout({
           {sidebarItems.map((item) => {
             const isActive = item.exact
               ? pathname === item.href
-              : pathname.startsWith(item.href)
+              : pathname.startsWith(item.href) || (item.href === '/dashboard/fields' && pathname === '/dashboard')
             return (
               <Link
                 key={item.href}

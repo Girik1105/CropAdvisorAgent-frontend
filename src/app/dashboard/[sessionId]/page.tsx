@@ -117,62 +117,56 @@ export default function SessionDetailPage() {
         )}
       </div>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Trace — left 2/3 */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <h2 className="text-[13px] font-semibold tracking-[0.15em] uppercase text-text/50">
-              Agent Reasoning Trace
+      {/* Agent Response — full width */}
+      {session.response && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <h2 className="text-[13px] font-semibold tracking-[0.15em] uppercase text-primary">
+              Agent Response
             </h2>
           </div>
+          <div className="p-5 bg-paper border border-0.5 border-grid rounded-xl">
+            <p className="text-[14px] text-text leading-[1.7]">{session.response}</p>
+          </div>
+        </div>
+      )}
 
-          {session.trace.length > 0 ? (
-            <TraceViewer trace={session.trace} visible={true} />
-          ) : (
-            <div className="bg-paper border border-0.5 border-grid rounded-xl p-10 text-center">
-              <div className="text-[32px] mb-3">🔍</div>
-              <p className="text-[14px] text-text/50 font-medium">No tool calls recorded</p>
-              <p className="text-[12px] text-text/30 mt-1">The agent processed this request without calling external tools.</p>
-            </div>
-          )}
+      {/* Recommendation — full width */}
+      {latestRec && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h2 className="text-[13px] font-semibold tracking-[0.15em] uppercase text-accent">
+              Recommendation
+            </h2>
+          </div>
+          <RecommendationCard recommendation={latestRec} visible={true} />
+        </div>
+      )}
+
+      {/* Agent Reasoning Trace — full width below */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+          <h2 className="text-[13px] font-semibold tracking-[0.15em] uppercase text-text/50">
+            Agent Reasoning Trace
+          </h2>
         </div>
 
-        {/* Sidebar — right 1/3 */}
-        <div className="space-y-6">
-          {/* Recommendation */}
-          {latestRec && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h2 className="text-[13px] font-semibold tracking-[0.15em] uppercase text-accent">
-                  Recommendation
-                </h2>
-              </div>
-              <RecommendationCard recommendation={latestRec} visible={true} />
-            </div>
-          )}
-
-          {/* Agent Response */}
-          {session.response && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <h2 className="text-[13px] font-semibold tracking-[0.15em] uppercase text-primary">
-                  Agent Response
-                </h2>
-              </div>
-              <div className="p-5 bg-paper border border-0.5 border-grid rounded-xl">
-                <p className="text-[14px] text-text leading-[1.7]">{session.response}</p>
-              </div>
-            </div>
-          )}
-        </div>
+        {session.trace.length > 0 ? (
+          <TraceViewer trace={session.trace} visible={true} />
+        ) : (
+          <div className="bg-paper border border-0.5 border-grid rounded-xl p-10 text-center">
+            <div className="text-[32px] mb-3">🔍</div>
+            <p className="text-[14px] text-text/50 font-medium">No tool calls recorded</p>
+            <p className="text-[12px] text-text/30 mt-1">The agent processed this request without calling external tools.</p>
+          </div>
+        )}
       </div>
     </div>
   )

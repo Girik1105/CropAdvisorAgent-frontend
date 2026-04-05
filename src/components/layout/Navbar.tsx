@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 
 const navItems = [
-  { href: '/#demo', label: 'Demo', matchPath: '/', exact: true },
-  { href: '/sessions', label: 'Sessions', matchPath: '/sessions', exact: false },
-  { href: '/fields', label: 'Fields', matchPath: '/fields', exact: false },
+  { href: '/#how-it-works', label: 'How It Works', matchPath: '/__none__', exact: true },
+  { href: '/#features', label: 'Features', matchPath: '/__none__', exact: true },
+  { href: '/demo', label: 'Demo', matchPath: '/demo', exact: false },
 ]
 
 export default function Navbar() {

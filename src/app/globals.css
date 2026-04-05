@@ -35,6 +35,18 @@ body {
 .hero-headline { animation: hero-up 700ms ease-out 0.4s both; }
 .hero-subtitle { animation: hero-up 700ms ease-out 0.7s both; }
 .hero-ctas { animation: hero-up 700ms ease-out 1.0s both; }
+.hero-badges { animation: hero-up 700ms ease-out 1.2s both; }
+.hero-tech { animation: hero-up 700ms ease-out 1.3s both; }
+
+/* Floating data badges */
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.hero-badge {
+  animation: hero-float 4s ease-in-out infinite;
+  will-change: transform;
+}
 
 /* ── Demo section scroll-triggered fade ── */
 .demo-fade {
@@ -116,6 +128,12 @@ body {
 }
 .farm-pulse-red { animation: farm-pulse 2s ease-in-out infinite; }
 .farm-pulse-amber { animation: farm-pulse 3s ease-in-out infinite; }
+
+/* ── Health check shimmer ── */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
