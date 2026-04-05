@@ -13,8 +13,7 @@ interface TraceViewerProps {
 export default function TraceViewer({ trace, visible, onComplete }: TraceViewerProps) {
   const [visibleCount, setVisibleCount] = useState(0)
 
-  const staggerDelay = 300 // ms between steps
-  const totalStaggerTime = trace.length * staggerDelay + 400 // last step animation duration
+  const staggerDelay = 400
 
   useEffect(() => {
     if (!visible) {
@@ -34,16 +33,16 @@ export default function TraceViewer({ trace, visible, onComplete }: TraceViewerP
     return () => clearInterval(interval)
   }, [visible, trace.length, staggerDelay])
 
-  // Fire onComplete after all steps + their animation finish
   const onCompleteRef = useCallback(() => {
     onComplete?.()
   }, [onComplete])
 
   useEffect(() => {
     if (!visible || trace.length === 0) return
-    const timer = setTimeout(onCompleteRef, totalStaggerTime)
+    const totalTime = trace.length * staggerDelay + 600
+    const timer = setTimeout(onCompleteRef, totalTime)
     return () => clearTimeout(timer)
-  }, [visible, trace.length, totalStaggerTime, onCompleteRef])
+  }, [visible, trace.length, staggerDelay, onCompleteRef])
 
   return (
     <div className="flex flex-col">
@@ -51,10 +50,12 @@ export default function TraceViewer({ trace, visible, onComplete }: TraceViewerP
         <div key={step.step}>
           {/* Connector line */}
           {i > 0 && (
-            <div className="flex justify-center">
+            <div className="flex justify-center py-1">
               <div
-                className={`w-px bg-[#E5E2D8] connector-line ${i < visibleCount ? 'visible' : ''}`}
-                style={{ transitionDelay: `${i * staggerDelay - 100}ms` }}
+                className={`w-px h-6 transition-all duration-300 ${
+                  i < visibleCount ? 'bg-[#D4D0C8]' : 'bg-transparent'
+                }`}
+                style={{ transitionDelay: `${i * staggerDelay - 200}ms` }}
               />
             </div>
           )}

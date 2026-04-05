@@ -105,13 +105,14 @@ export async function login(usernameInput: string, password: string): Promise<{ 
 export async function signup(
   username: string,
   email: string,
+  phoneNumber: string,
   password: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const res = await fetch(`${API_URL}/auth/signup/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, phone_number: phoneNumber, password }),
     })
 
     if (res.ok || res.status === 201) {

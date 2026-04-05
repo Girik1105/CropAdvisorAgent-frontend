@@ -14,6 +14,7 @@ export default function SignupPage() {
   }, [router])
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,7 +30,7 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    const result = await signup(username, email, password)
+    const result = await signup(username, email, phoneNumber, password)
 
     if (result.ok) {
       refresh()
@@ -89,6 +90,21 @@ export default function SignupPage() {
               placeholder="farmer@example.com"
             />
             <span className="text-[11px] text-text/30 mt-1 block">Optional</span>
+          </div>
+
+          <div>
+            <label htmlFor="phone" className="block text-[11px] font-semibold tracking-[0.2em] uppercase text-text/40 mb-1.5">
+              Phone Number
+            </label>
+            <input
+              id="phone"
+              type="tel"
+              required
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="w-full bg-paper border border-grid rounded-card px-4 py-2.5 text-[14px] text-text placeholder:text-text/25 focus:outline-none focus:border-primary/40 transition-colors"
+              placeholder="+1 (480) 555-0142"
+            />
           </div>
 
           <div>

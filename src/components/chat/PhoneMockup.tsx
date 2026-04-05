@@ -144,7 +144,6 @@ export default function PhoneMockup({ onResponse }: PhoneMockupProps) {
 
     try {
       const response = await api.sendMessage({
-        phone_number: '+16812911561',
         message: text,
       })
 

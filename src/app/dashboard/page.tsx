@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
-import { Field, Session, WeatherSnapshot, CropHealthRecord, SoilProfile } from '@/lib/types'
+import { Field, SessionSummary, WeatherSnapshot, CropHealthRecord, SoilProfile } from '@/lib/types'
 import NDVIBar from '@/components/fields/NDVIBar'
+import AddFieldModal from '@/components/dashboard/AddFieldModal'
+import FarmMap from '@/components/dashboard/FarmMap'
 
 interface FieldData {
   field: Field
@@ -15,19 +17,17 @@ interface FieldData {
 
 export default function DashboardPage() {
   const [fieldData, setFieldData] = useState<FieldData[]>([])
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddField, setShowAddField] = useState(false)
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function load() {
-      const [fields, allSessions] = await Promise.all([
-        api.getFields(),
-        api.getSessions(),
-      ])
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    const fields = await api.getFields()
 
-      setSessions(allSessions)
-
-      const data = await Promise.all(
+    const [fieldDetails, allSessions] = await Promise.all([
+      Promise.all(
         fields.map(async (field) => {
           const [weatherList, healthList, soil] = await Promise.all([
             api.getFieldWeather(field.id),
@@ -41,33 +41,59 @@ export default function DashboardPage() {
             soil,
           }
         })
-      )
+      ),
+      Promise.all(fields.map((f) => api.getFieldSessions(f.id))).then((r) => r.flat()),
+    ])
 
-      setFieldData(data)
-      setLoading(false)
-    }
-
-    load()
+    setSessions(allSessions)
+    setFieldData(fieldDetails)
+    setLoading(false)
   }, [])
 
-  const urgentCount = sessions.filter(
-    (s) => s.recommendations[0]?.urgency === 'immediate' || s.recommendations[0]?.urgency === 'within_24h'
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // Count fields with stressed NDVI as alerts
+  const urgentCount = fieldData.filter(
+    (d) => d.cropHealth && d.cropHealth.ndvi_score < 0.4
   ).length
 
+  const selectedData = selectedFieldId
+    ? fieldData.find((d) => d.field.id === selectedFieldId)
+    : null
+
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-6xl pt-16 lg:pt-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 w-full pt-16 lg:pt-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-display text-primary text-[24px] font-semibold tracking-wide">
-          Overview
-        </h1>
-        <p className="font-editorial italic text-text/40 text-[15px] mt-1">
-          Environmental data across your registered fields
-        </p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="font-display text-primary text-[24px] font-semibold tracking-wide">
+            Overview
+          </h1>
+          <p className="font-editorial italic text-text/40 text-[15px] mt-1">
+            Environmental data across your registered fields
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddField(true)}
+          className="bg-primary hover:bg-primary/90 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 flex-shrink-0"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+          Add Field
+        </button>
       </div>
 
+      <AddFieldModal
+        open={showAddField}
+        onClose={() => setShowAddField(false)}
+        onFieldAdded={loadData}
+      />
+
       {/* Metrics row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <MetricCard
           label="Fields"
           value={loading ? '...' : `${fieldData.length}`}
@@ -86,29 +112,67 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Field panels */}
-      <div className="space-y-6">
-        {loading ? (
-          [1, 2, 3].map((i) => <FieldSkeleton key={i} />)
-        ) : fieldData.length === 0 ? (
-          <div className="bg-paper border border-0.5 border-grid rounded-card p-10 text-center">
-            <p className="text-[15px] text-text/50 mb-1">No fields registered yet</p>
-            <p className="text-[13px] text-text/30">
-              Send a message to the agent or ask your admin to add a field
-            </p>
+      {loading ? (
+        <div className="space-y-6">
+          <div className="bg-paper border border-0.5 border-grid rounded-lg animate-pulse" style={{ height: 360 }} />
+          <FieldSkeleton />
+        </div>
+      ) : fieldData.length === 0 ? (
+        <div className="bg-paper border border-0.5 border-grid rounded-lg p-12 text-center">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-primary" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 14V6l6-4 6 4v8H2z" />
+              <path d="M6 14V9h4v5" />
+            </svg>
           </div>
-        ) : (
-          fieldData.map(({ field, weather, cropHealth, soil }) => (
-            <FieldPanel
-              key={field.id}
-              field={field}
-              weather={weather}
-              cropHealth={cropHealth}
-              soil={soil}
+          <p className="text-[16px] font-semibold text-text mb-1">No fields registered yet</p>
+          <p className="text-[13px] text-text/40 mb-5">
+            Add your first field to start monitoring weather, crop health, and soil data
+          </p>
+          <button
+            onClick={() => setShowAddField(true)}
+            className="bg-primary hover:bg-primary/90 text-white text-[13px] font-semibold px-6 py-2.5 rounded-full transition-colors inline-flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+            Add Your First Field
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Farm Map */}
+          <div className="mb-6">
+            <FarmMap
+              fieldData={fieldData}
+              selectedFieldId={selectedFieldId}
+              onSelectField={setSelectedFieldId}
             />
-          ))
-        )}
-      </div>
+          </div>
+
+          {/* Selected field detail or all fields */}
+          <div className="space-y-6">
+            {selectedData ? (
+              <FieldPanel
+                field={selectedData.field}
+                weather={selectedData.weather}
+                cropHealth={selectedData.cropHealth}
+                soil={selectedData.soil}
+              />
+            ) : (
+              fieldData.map(({ field, weather, cropHealth, soil }) => (
+                <FieldPanel
+                  key={field.id}
+                  field={field}
+                  weather={weather}
+                  cropHealth={cropHealth}
+                  soil={soil}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -155,7 +219,7 @@ function FieldPanel({
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/dashboard/fields"
+              href={`/dashboard/sessions?field=${field.id}`}
               className="text-[12px] text-accent hover:text-accent/80 font-medium transition-colors"
             >
               View sessions →

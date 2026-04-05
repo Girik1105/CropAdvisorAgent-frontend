@@ -1,4 +1,4 @@
-import { AgentResponse, Field, Session, TraceStep, VoiceData, WeatherSnapshot, CropHealthRecord, SoilProfile } from './types'
+import { AgentResponse, BackendTrace, BackendMessage, CreateFieldPayload, Field, Session, SessionSummary, TraceStep, VoiceData, WeatherSnapshot, CropHealthRecord, SoilProfile } from './types'
 import { mockFields, mockSessions, showcaseResponse, simulateDelay } from './mock-data'
 import { API_URL } from './env'
 import { getAccessToken, refreshAccessToken, clearTokens } from './auth'
@@ -25,13 +25,55 @@ async function request<T>(path: string, options?: RequestInit, retry = true): Pr
     throw new Error('Session expired')
   }
 
-  if (!res.ok) throw new Error(`API error: ${res.status}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    const msg = body
+      ? Object.entries(body).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('; ')
+      : `API error: ${res.status}`
+    throw new Error(msg)
+  }
+  if (res.status === 204) return undefined as T
   return res.json()
+}
+
+// Transform backend messages into TraceStep[] for the trace viewer
+function messagesToTraceSteps(messages: BackendMessage[]): TraceStep[] {
+  return messages
+    .filter((m) => m.tool_name && m.tool_input && m.tool_output)
+    .map((m, i) => ({
+      step: i + 1,
+      tool: m.tool_name as TraceStep['tool'],
+      input: m.tool_input || {},
+      output: m.tool_output || {},
+      duration_ms: m.duration_ms || 0,
+    }))
+}
+
+// Transform backend trace response into a frontend Session
+function traceToSession(trace: BackendTrace): Session {
+  const messages = trace.messages || []
+  const userMsg = messages.find((m) => m.role === 'user')
+  const agentMsgs = messages.filter((m) => m.role === 'agent' || m.role === 'final_response')
+  const lastAgentMsg = agentMsgs.length > 0 ? agentMsgs[agentMsgs.length - 1] : null
+
+  return {
+    id: trace.session.id,
+    field_id: trace.session.field,
+    field_name: trace.session.field_name,
+    phone_number: trace.session.phone_number,
+    channel: trace.session.channel,
+    message: userMsg?.content || '',
+    response: lastAgentMsg?.content || '',
+    recommendations: trace.recommendations || [],
+    trace: messagesToTraceSteps(messages),
+    created_at: trace.session.created_at,
+    updated_at: trace.session.updated_at,
+    total_duration_ms: 0,
+  }
 }
 
 export const api = {
   sendMessage: async (body: {
-    phone_number: string
     message: string
     field_id?: string
   }): Promise<AgentResponse> => {
@@ -39,33 +81,41 @@ export const api = {
       await simulateDelay(1800)
       return { ...showcaseResponse, session_id: `sess-${Date.now()}` }
     }
-    try {
-      const raw = await request<{
-        session_id: string
-        response: string
-        recommendation: {
-          action_type: string
-          urgency: string
-          description: string
-          estimated_cost: string
-          risk_if_delayed: string
-        }
-        total_duration_ms: number
-      }>('/agent/run/', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      })
-      return {
-        session_id: raw.session_id,
-        response: raw.response,
-        recommendations: raw.recommendation
-          ? [raw.recommendation as AgentResponse['recommendations'][0]]
-          : [],
-        trace: [], // trace fetched separately via getTraceSteps
+    const raw = await request<{
+      session_id: string
+      response: string
+      recommendation: {
+        action_type: string
+        urgency: string
+        description: string
+        estimated_cost: string
+        risk_if_delayed: string
       }
+      total_duration_ms: number
+    }>('/agent/message/', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+    return {
+      session_id: raw.session_id,
+      response: raw.response,
+      recommendations: raw.recommendation
+        ? [raw.recommendation as AgentResponse['recommendations'][0]]
+        : [],
+      trace: [],
+    }
+  },
+
+  getTrace: async (sessionId: string): Promise<Session | null> => {
+    if (USE_MOCK) {
+      await simulateDelay(400)
+      return mockSessions.find((s) => s.id === sessionId) || null
+    }
+    try {
+      const raw = await request<BackendTrace>(`/agent/trace/${sessionId}/`)
+      return traceToSession(raw)
     } catch {
-      await simulateDelay(1800)
-      return { ...showcaseResponse, session_id: `sess-${Date.now()}` }
+      return null
     }
   },
 
@@ -76,22 +126,10 @@ export const api = {
       return session?.trace || []
     }
     try {
-      return await request<TraceStep[]>(`/agent/trace/${sessionId}/`)
+      const raw = await request<BackendTrace>(`/agent/trace/${sessionId}/`)
+      return messagesToTraceSteps(raw.messages || [])
     } catch {
       return []
-    }
-  },
-
-  getTrace: async (sessionId: string): Promise<Session | null> => {
-    if (USE_MOCK) {
-      await simulateDelay(400)
-      return mockSessions.find((s) => s.id === sessionId) || null
-    }
-    try {
-      return await request<Session>(`/agent/trace/${sessionId}/`)
-    } catch {
-      await simulateDelay(400)
-      return mockSessions.find((s) => s.id === sessionId) || null
     }
   },
 
@@ -108,29 +146,58 @@ export const api = {
     }
   },
 
-  getFieldSessions: async (fieldId: string): Promise<Session[]> => {
+  createField: async (data: CreateFieldPayload): Promise<Field> => {
+    return request<Field>('/fields/', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  deleteField: async (fieldId: string): Promise<void> => {
+    await request<void>(`/fields/${fieldId}/`, { method: 'DELETE' })
+  },
+
+  getFieldSessions: async (fieldId: string): Promise<SessionSummary[]> => {
     if (USE_MOCK) {
       await simulateDelay(400)
-      return mockSessions.filter((s) => s.field_id === fieldId)
+      return mockSessions.filter((s) => s.field_id === fieldId).map(s => ({
+        id: s.id,
+        phone_number: s.phone_number,
+        field: s.field_id,
+        field_name: s.field_name,
+        channel: s.channel as 'sms' | 'dashboard',
+        created_at: s.created_at,
+        updated_at: s.created_at,
+      }))
     }
     try {
-      return await request<Session[]>(`/fields/${fieldId}/sessions/`)
+      return await request<SessionSummary[]>(`/fields/${fieldId}/sessions/`)
     } catch {
-      await simulateDelay(400)
-      return mockSessions.filter((s) => s.field_id === fieldId)
+      return []
     }
   },
 
-  getSessions: async (): Promise<Session[]> => {
-    if (USE_MOCK) {
-      await simulateDelay(400)
-      return mockSessions
-    }
+  // Fetch full session data (with trace) for a session summary
+  enrichSession: async (summary: SessionSummary): Promise<Session | null> => {
     try {
-      return await request<Session[]>('/agent/sessions/')
+      const raw = await request<BackendTrace>(`/agent/trace/${summary.id}/`)
+      return traceToSession(raw)
     } catch {
-      await simulateDelay(400)
-      return mockSessions
+      // Return a minimal session if trace fetch fails
+      return {
+        id: summary.id,
+        field_id: summary.field,
+        field_name: summary.field_name,
+        phone_number: summary.phone_number,
+        channel: summary.channel,
+        message: '',
+        response: '',
+        recommendations: [],
+        trace: [],
+        created_at: summary.created_at,
+        updated_at: summary.updated_at,
+        total_duration_ms: 0,
+      }
     }
   },
 

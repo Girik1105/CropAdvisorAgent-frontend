@@ -114,13 +114,13 @@ export const mockSessions: Session[] = [
     field_id: 'patel-cotton-east',
     field_name: 'Patel Cotton East',
     phone_number: '+1 (480) 555-0142',
+    channel: 'sms',
     message: "How's my cotton field looking?",
-    message_count: 2,
-    recommendation_count: 1,
     recommendations: showcaseRecommendations,
     trace: showcaseTrace,
     response: showcaseResponse.response,
     created_at: '2026-04-04T09:23:00Z',
+    updated_at: '2026-04-04T09:23:01Z',
     total_duration_ms: 1440,
   },
   {
@@ -128,9 +128,8 @@ export const mockSessions: Session[] = [
     field_id: 'mesa-citrus',
     field_name: 'Mesa Citrus Grove',
     phone_number: '+1 (480) 555-0198',
+    channel: 'dashboard',
     message: 'Check on my citrus trees please',
-    message_count: 2,
-    recommendation_count: 1,
     recommendations: [
       {
         action_type: 'no_action',
@@ -167,6 +166,7 @@ export const mockSessions: Session[] = [
     response:
       'Your citrus grove looks great! NDVI is at 0.71, which is healthy. No action needed right now — just keep your current irrigation going.',
     created_at: '2026-04-04T08:15:00Z',
+    updated_at: '2026-04-04T08:15:01Z',
     total_duration_ms: 1190,
   },
   {
@@ -174,9 +174,8 @@ export const mockSessions: Session[] = [
     field_id: 'chandler-alfalfa',
     field_name: 'Chandler Alfalfa',
     phone_number: '+1 (480) 555-0267',
+    channel: 'sms',
     message: 'My alfalfa looks yellow, what should I do?',
-    message_count: 2,
-    recommendation_count: 1,
     recommendations: [
       {
         action_type: 'fertilize',
@@ -213,6 +212,7 @@ export const mockSessions: Session[] = [
     response:
       "Your alfalfa is showing nitrogen deficiency — that's what's causing the yellowing. I'd recommend applying 40 lbs/acre of urea as soon as possible. The estimated cost is about $320 for your 200 acres.",
     created_at: '2026-04-03T16:45:00Z',
+    updated_at: '2026-04-03T16:45:01Z',
     total_duration_ms: 1400,
   },
 ]

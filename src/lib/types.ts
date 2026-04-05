@@ -1,7 +1,8 @@
 export type ActionType = 'irrigate' | 'fertilize' | 'pest_alert' | 'harvest' | 'no_action'
 export type Urgency = 'immediate' | 'within_24h' | 'within_3d' | 'monitor'
-export type ToolName = 'get_weather' | 'get_crop_health' | 'get_soil_profile'
+export type ToolName = 'get_weather' | 'get_crop_health' | 'get_soil_profile' | 'get_market_prices' | 'get_pest_risk' | 'get_water_usage' | 'get_growth_stage' | 'intent_classifier'
 
+// What the trace viewer expects for each tool call step
 export interface TraceStep {
   step: number
   tool: ToolName
@@ -11,11 +12,16 @@ export interface TraceStep {
 }
 
 export interface Recommendation {
+  id?: string
   action_type: ActionType
   urgency: Urgency
   description: string
-  estimated_cost: string
+  estimated_cost: string | number
+  cost_breakdown?: string
   risk_if_delayed: string
+  timing_rationale?: string
+  implementation_steps?: string[]
+  created_at?: string
 }
 
 export interface AgentResponse {
@@ -33,23 +39,64 @@ export interface Field {
   lng: number
   area_acres: number
   soil_type: string
+  owner_phone?: string
   last_ndvi?: number
   last_recommendation?: string
 }
 
+// What the backend returns from /fields/<id>/sessions/
+export interface SessionSummary {
+  id: string
+  phone_number: string
+  field: string
+  field_name: string
+  channel: 'sms' | 'dashboard'
+  created_at: string
+  updated_at: string
+}
+
+// What the backend returns from /agent/trace/<id>/
+export interface BackendTrace {
+  session: SessionSummary
+  messages: BackendMessage[]
+  recommendations: Recommendation[]
+}
+
+export interface BackendMessage {
+  id: string
+  role: string
+  content: string
+  tool_name: string | null
+  tool_input: Record<string, unknown> | null
+  tool_output: Record<string, unknown> | null
+  duration_ms: number | null
+  created_at: string
+}
+
+// Merged session used by the frontend (built from trace data)
 export interface Session {
   id: string
   field_id: string
   field_name: string
   phone_number: string
+  channel: string
   message: string
-  message_count: number
-  recommendation_count: number
+  response: string
   recommendations: Recommendation[]
   trace: TraceStep[]
-  response: string
   created_at: string
+  updated_at: string
   total_duration_ms: number
+}
+
+export interface CreateFieldPayload {
+  name: string
+  crop_type: string
+  lat: number
+  lng: number
+  area_acres: number
+  soil_type: string
+  owner_phone: string
 }
 
 export interface VoiceData {
