@@ -98,10 +98,13 @@ export default function PhoneMockup({ onResponse }: PhoneMockupProps) {
   const [isThinking, setIsThinking] = useState(false)
   const [typingText, setTypingText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesContainerRef.current
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
   }
 
   useEffect(scrollToBottom, [messages, typingText, isThinking])
@@ -218,7 +221,7 @@ export default function PhoneMockup({ onResponse }: PhoneMockupProps) {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-3 py-3">
+              <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-3 py-3">
                 {messages.map((msg) => (
                   <MessageBubble key={msg.id} message={msg} />
                 ))}
@@ -242,7 +245,6 @@ export default function PhoneMockup({ onResponse }: PhoneMockupProps) {
                   </div>
                 )}
 
-                <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
