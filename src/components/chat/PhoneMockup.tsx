@@ -73,6 +73,7 @@ function CallTab() {
     try {
       const session = await Conversation.startSession({
         agentId,
+        connectionType: 'websocket',
         onConnect: ({ conversationId }) => {
           console.log('[CropAdvisor] Voice connected:', conversationId)
         },
