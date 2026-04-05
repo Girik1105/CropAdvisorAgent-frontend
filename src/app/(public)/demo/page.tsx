@@ -5,7 +5,6 @@ import Link from 'next/link'
 import PhoneMockup from '@/components/chat/PhoneMockup'
 import TraceViewer from '@/components/trace/TraceViewer'
 import RecommendationCard from '@/components/recommendation/RecommendationCard'
-import VoiceWidget from '@/components/chat/VoiceWidget'
 import FieldCard from '@/components/fields/FieldCard'
 import NDVIBar from '@/components/fields/NDVIBar'
 import { AgentResponse, Session } from '@/lib/types'
@@ -79,10 +78,9 @@ export default function DemoPage() {
             <div className="lg:w-[380px] flex-shrink-0 flex flex-col items-center">
               <PhoneMockup onResponse={handleResponse} useMock />
               <div className="mt-6 text-center">
-                <p className="text-[12px] text-text/30">Or call the agent directly</p>
+                <p className="text-[12px] text-text/30">Or call directly</p>
                 <p className="text-[16px] font-bold text-accent mt-0.5">(681) 291-1561</p>
                 <p className="text-[11px] text-text/20 mt-1">Powered by ElevenLabs</p>
-                <VoiceWidget />
               </div>
             </div>
 

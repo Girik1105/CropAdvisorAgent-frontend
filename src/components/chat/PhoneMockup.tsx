@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useConversation } from '@11labs/react'
 import { Message, AgentResponse } from '@/lib/types'
 import { api } from '@/lib/api'
 import MessageBubble from './MessageBubble'
@@ -10,17 +11,52 @@ interface PhoneMockupProps {
   useMock?: boolean
 }
 
-// ── Call Tab ──
-function CallTab() {
-  const [callState, setCallState] = useState<'idle' | 'active'>('idle')
-  const [seconds, setSeconds] = useState(0)
+// ── Call Tab (real ElevenLabs WebRTC voice) ──
+const PHONE_ICON = "M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"
+const BAR_COUNT = 8
 
+function CallTab() {
+  const [error, setError] = useState<string | null>(null)
+  const [seconds, setSeconds] = useState(0)
+  const barRefs = useRef<(HTMLDivElement | null)[]>([])
+  const rafIdRef = useRef<number>(0)
+
+  const conversation = useConversation({
+    onConnect: () => setError(null),
+    onDisconnect: (details) => {
+      if (details.reason === 'error') {
+        setError((details as { message?: string }).message ?? 'Connection lost')
+      }
+    },
+    onError: (message) => setError(message),
+  })
+
+  const status = conversation.status
+  const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID
+
+  // Timer — only ticks while connected
   useEffect(() => {
-    if (callState !== 'active') return
-    setSeconds(0)
+    if (status !== 'connected') { setSeconds(0); return }
     const interval = setInterval(() => setSeconds((s) => s + 1), 1000)
     return () => clearInterval(interval)
-  }, [callState])
+  }, [status])
+
+  // Waveform driven by real audio levels
+  useEffect(() => {
+    if (status !== 'connected') return
+    const animate = () => {
+      const vol = Math.max(conversation.getInputVolume(), conversation.getOutputVolume())
+      barRefs.current.forEach((bar, i) => {
+        if (!bar) return
+        const offset = Math.sin(Date.now() / 200 + i * 0.8) * 0.3
+        const h = Math.max(15, Math.min(90, vol * 100 + offset * 40))
+        bar.style.height = `${h}%`
+      })
+      rafIdRef.current = requestAnimationFrame(animate)
+    }
+    rafIdRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafIdRef.current)
+  }, [status, conversation])
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
@@ -28,7 +64,23 @@ function CallTab() {
     return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
   }
 
-  if (callState === 'idle') {
+  const handleCall = async () => {
+    if (!agentId) { setError('Agent not configured'); return }
+    setError(null)
+    try {
+      await conversation.startSession({ agentId })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to connect'
+      setError(msg.includes('Permission') || msg.includes('NotAllowed') ? 'Microphone access denied' : msg)
+    }
+  }
+
+  const handleHangup = async () => {
+    try { await conversation.endSession() } catch { /* session may already be closed */ }
+  }
+
+  // ── Idle / disconnected ──
+  if (status === 'disconnected') {
     return (
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         <div className="w-16 h-16 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-3">
@@ -37,54 +89,88 @@ function CallTab() {
         <p className="text-white text-[16px] font-medium">CropAdvisor</p>
         <p className="text-white/35 text-[12px] mt-0.5">AI Farming Agent</p>
         <button
-          onClick={() => setCallState('active')}
+          onClick={handleCall}
           className="mt-8 w-14 h-14 rounded-full bg-[#22c55e] flex items-center justify-center shadow-lg shadow-green-500/25 hover:bg-[#16a34a] transition-colors"
         >
           <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+            <path d={PHONE_ICON} />
           </svg>
         </button>
         <p className="text-white/25 text-[11px] mt-3">Tap to call</p>
+        {error && <p className="text-red-400 text-[11px] mt-2 text-center max-w-[200px]">{error}</p>}
       </div>
     )
   }
 
+  // ── Connecting ──
+  if (status === 'connecting') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="w-16 h-16 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-3">
+          <span className="text-[18px] text-[#5B7C6B] font-bold">CA</span>
+        </div>
+        <p className="text-white text-[16px] font-medium">CropAdvisor</p>
+        <p className="text-white/30 text-[11px] mt-0.5">Connecting...</p>
+        <div className="mt-8 w-14 h-14 rounded-full bg-[#22c55e]/50 flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className="text-white/25 text-[11px] mt-3">Requesting microphone...</p>
+      </div>
+    )
+  }
+
+  // ── Connected ──
+  if (status === 'connected') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="w-14 h-14 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-2">
+          <span className="text-[16px] text-[#5B7C6B] font-bold">CA</span>
+        </div>
+        <p className="text-white text-[15px] font-medium">CropAdvisor</p>
+        <p className="text-white/30 text-[11px] mt-0.5">
+          {conversation.isSpeaking ? 'Agent is speaking...' : 'Listening...'}
+        </p>
+
+        {/* Timer */}
+        <p className="text-white/60 text-[28px] font-mono mt-5 tabular-nums">{formatTime(seconds)}</p>
+
+        {/* Live waveform */}
+        <div className="flex items-end justify-center gap-[3px] h-10 mt-4">
+          {Array.from({ length: BAR_COUNT }).map((_, i) => (
+            <div
+              key={i}
+              ref={(el) => { barRefs.current[i] = el }}
+              className="w-[3px] bg-[#5B7C6B] rounded-full transition-[height] duration-75"
+              style={{ height: '15%' }}
+            />
+          ))}
+        </div>
+
+        {/* End call */}
+        <button
+          onClick={handleHangup}
+          className="mt-8 w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/25 hover:bg-red-600 transition-colors"
+        >
+          <svg className="w-6 h-6 text-white rotate-[135deg]" viewBox="0 0 24 24" fill="currentColor">
+            <path d={PHONE_ICON} />
+          </svg>
+        </button>
+        <p className="text-white/25 text-[11px] mt-3">End call</p>
+      </div>
+    )
+  }
+
+  // ── Disconnecting ──
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6">
       <div className="w-14 h-14 rounded-full bg-[#2D4A3E]/20 flex items-center justify-center mb-2">
         <span className="text-[16px] text-[#5B7C6B] font-bold">CA</span>
       </div>
       <p className="text-white text-[15px] font-medium">CropAdvisor</p>
-      <p className="text-white/30 text-[11px] mt-0.5">Connected via ElevenLabs</p>
-
-      {/* Timer */}
-      <p className="text-white/60 text-[28px] font-mono mt-5 tabular-nums">{formatTime(seconds)}</p>
-
-      {/* Waveform */}
-      <div className="flex items-end justify-center gap-[3px] h-10 mt-4">
-        {[0.7, 1.0, 0.5, 1.3, 0.8, 1.1, 0.6, 0.9].map((speed, i) => (
-          <div
-            key={i}
-            className="w-[3px] bg-[#5B7C6B] rounded-full"
-            style={{
-              animation: `waveform-bar ${speed}s ease-in-out infinite`,
-              animationDelay: `${i * 0.1}s`,
-              height: '30%',
-            }}
-          />
-        ))}
+      <p className="text-white/30 text-[11px] mt-0.5">Ending call...</p>
+      <div className="mt-8 w-14 h-14 rounded-full bg-red-500/50 flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />
       </div>
-
-      {/* End call */}
-      <button
-        onClick={() => setCallState('idle')}
-        className="mt-8 w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/25 hover:bg-red-600 transition-colors"
-      >
-        <svg className="w-6 h-6 text-white rotate-[135deg]" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-        </svg>
-      </button>
-      <p className="text-white/25 text-[11px] mt-3">End call</p>
     </div>
   )
 }
